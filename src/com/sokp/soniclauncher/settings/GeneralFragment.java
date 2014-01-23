@@ -23,8 +23,8 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.SwitchPreference;
 
-
 import com.sokp.soniclauncher.NotificationListener;
+import com.sokp.soniclauncher.IconPackHelper;
 import com.sokp.soniclauncher.R;
 
 public class GeneralFragment extends SettingsPreferenceFragment implements
@@ -44,6 +44,15 @@ public class GeneralFragment extends SettingsPreferenceFragment implements
             mNotificationBadges.setChecked(false);
         }
         mNotificationBadges.setOnPreferenceChangeListener(this);
+
+        Preference iconPack = findPreference(SettingsProvider.KEY_ICON_PACK);
+        iconPack.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                IconPackHelper.pickIconPack(mContext, false);
+                return true;
+            }
+        });
     }
 
     @Override
@@ -67,6 +76,5 @@ public class GeneralFragment extends SettingsPreferenceFragment implements
                     }
         });
         builder.show();
-
     }
 }
