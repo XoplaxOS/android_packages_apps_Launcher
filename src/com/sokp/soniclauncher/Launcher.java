@@ -2760,7 +2760,7 @@ public class Launcher extends Activity
 
         if (v instanceof Workspace) {
             if (mWorkspace.isInOverviewMode()) {
-                mWorkspace.exitOverviewMode(true);
+                //mWorkspace.exitOverviewMode(true);
             }
             return;
         }
