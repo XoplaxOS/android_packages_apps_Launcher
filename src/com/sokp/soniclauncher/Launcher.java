@@ -110,6 +110,8 @@ import com.sokp.soniclauncher.compat.UserHandleCompat;
 import com.sokp.soniclauncher.compat.UserManagerCompat;
 import com.sokp.soniclauncher.settings.SettingsActivity;
 import com.sokp.soniclauncher.settings.SettingsProvider;
+import com.slim.slimlauncher.util.GestureHelper; 
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -2059,6 +2061,9 @@ public class Launcher extends Activity
             return;
         }
 
+        String homeButtonAction = SettingsProvider.getString(this,
+                SettingsProvider.KEY_HOME_BUTTON_ACTION, "default_homescreen");
+
         // Close the menu
         if (Intent.ACTION_MAIN.equals(intent.getAction())) {
             // also will cancel mWaitingForResult.
@@ -2074,23 +2079,36 @@ public class Launcher extends Activity
             }
             Folder openFolder = mWorkspace.getOpenFolder();
             // In all these cases, only animate if we're already on home
+            boolean performCustomAction = true;
             mWorkspace.exitWidgetResizeMode();
 
-            boolean moveToDefaultScreen = mLauncherCallbacks != null ?
-                    mLauncherCallbacks.shouldMoveToDefaultScreenOnHomeIntent() : true;
-            if (alreadyOnHome && mState == State.WORKSPACE && !mWorkspace.isTouchActive() &&
-                    openFolder == null && moveToDefaultScreen) {
-                mWorkspace.moveToDefaultScreen(true);
+            if (mWorkspace.isInOverviewMode()) {
+                mWorkspace.exitOverviewMode(alreadyOnHome);
+                performCustomAction = false;
+            }
+            if (mHasFocus && mState == State.WORKSPACE && !mWorkspace.isTouchActive() &&
+                    openFolder == null) {
+                if (performCustomAction && SettingsProvider.getBoolean(this,
+                        SettingsProvider.KEY_HOME_BUTTON_DEFAULT_SCREEN, true) &&
+                        !(mWorkspace.getScreenIdForPageIndex(
+                                mWorkspace.getCurrentPage()) == mWorkspace.mDefaultScreenId)) {
+                    mWorkspace.moveToDefaultScreen(true);
+                } else if (performCustomAction) {
+                    GestureHelper.performGestureAction(this, homeButtonAction, "home_button");
+                    return;
+                }
             }
 
             closeFolder();
             exitSpringLoadedDragMode();
 
+            if (isAllAppsVisible()) {
+                showWorkspace(alreadyOnHome);
+            }
+
             // If we are already on home, then just animate back to the workspace,
             // otherwise, just wait until onResume to set the state back to Workspace
-            if (alreadyOnHome) {
-                showWorkspace(true);
-            } else {
+            if (!alreadyOnHome) {
                 mOnResumeState = State.WORKSPACE;
             }
 
@@ -2349,6 +2367,11 @@ public class Launcher extends Activity
         }
         if (mLauncherCallbacks != null) {
             return mLauncherCallbacks.onPrepareOptionsMenu(menu);
+        }
+        if (!isAllAppsVisible()) {
+            String menuAction = SettingsProvider.getString(this,
+                    SettingsProvider.KEY_MENU_BUTTON_ACTION, "show_previews");
+            GestureHelper.performGestureAction(this, menuAction, "menu_button");
         }
 
         return false;
@@ -2618,8 +2641,10 @@ public class Launcher extends Activity
         } else {
             mWorkspace.exitWidgetResizeMode();
 
-            // Back button is a no-op here, but give at least some feedback for the button press
-            mWorkspace.showOutlinesTemporarily();
+            String backAction = SettingsProvider.getString(this,
+                    SettingsProvider.KEY_BACK_BUTTON_ACTION, "nothing");
+
+            GestureHelper.performGestureAction(this, backAction, "back_button");
         }
     }
 
