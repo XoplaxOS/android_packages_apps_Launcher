@@ -295,6 +295,14 @@ public class LauncherProvider extends ContentProvider {
         mOpenHelper.createEmptyDB(mOpenHelper.getWritableDatabase());
     }
 
+    public void clearFlagEmptyDbCreated() {
+        String spKey = LauncherAppState.getSharedPreferencesKey();
+        getContext().getSharedPreferences(spKey, Context.MODE_PRIVATE)
+            .edit()
+            .remove(EMPTY_DATABASE_CREATED)
+            .commit();
+    }
+
     /**
      * Loads the default workspace based on the following priority scheme:
      *   1) From a package provided by play store
@@ -336,7 +344,7 @@ public class LauncherProvider extends ContentProvider {
                 mOpenHelper.loadFavorites(mOpenHelper.getWritableDatabase(),
                         getDefaultLayoutParser());
             }
-            sp.edit().remove(EMPTY_DATABASE_CREATED).commit();
+            clearFlagEmptyDbCreated();
         }
     }
 
