@@ -14,6 +14,7 @@
      limitations under the License.
 -->
 
-<com.sokp.soniclauncher.AccessibleTabView
+<com.sokp.soniclauncher.InsettableFrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/TabIndicator.AppsCustomize" />
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
