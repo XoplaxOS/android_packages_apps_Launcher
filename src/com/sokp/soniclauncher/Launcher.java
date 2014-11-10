@@ -527,6 +527,10 @@ public class Launcher extends Activity
         initializeDynamicGrid();
 
         mProfile.layout(this);
+
+        LauncherAppState.getInstance().getIconCache().flush();
+        LauncherAppState.getInstance().getModel().forceReload();
+
         mWorkspace.reloadSettings();
 
         mAppsCustomizeContent.updateGridSize();
