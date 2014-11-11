@@ -58,7 +58,7 @@
   public void setAnimationProgress(float);
 }
 
--keep class com.android.launcher3.FastBitmapDrawable {
+-keep class com.sokp.soniclauncher.FastBitmapDrawable {
   public int getBrightness();
   public void setBrightness(int);
 }
