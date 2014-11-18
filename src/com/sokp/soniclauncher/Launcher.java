@@ -810,8 +810,7 @@ public class Launcher extends Activity
         return screenId;
     }
 
-    @Override
-    protected void onActivityResult(
+    private void handleActivityResult(
             final int requestCode, final int resultCode, final Intent data) {
         // Reset the startActivity waiting flag
         setWaitingForResult(false);
@@ -944,6 +943,16 @@ public class Launcher extends Activity
                     ON_ACTIVITY_RESULT_ANIMATION_DELAY, false);
         }
         mDragLayer.clearAnimatedView();
+
+    }
+
+    @Override
+    protected void onActivityResult(
+            final int requestCode, final int resultCode, final Intent data) {
+        handleActivityResult(requestCode, resultCode, data);
+        if (mLauncherCallbacks != null) {
+            mLauncherCallbacks.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private PendingAddArguments preparePendingAddArgs(int requestCode, Intent data, int
