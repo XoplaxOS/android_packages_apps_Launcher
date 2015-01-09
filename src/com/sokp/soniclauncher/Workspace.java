@@ -64,13 +64,13 @@ import android.view.accessibility.AccessibilityManager;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.TextView;
-
 import com.sokp.soniclauncher.FolderIcon.FolderRingAnimator;
 import com.sokp.soniclauncher.Launcher.CustomContentCallbacks;
 import com.sokp.soniclauncher.LauncherSettings.Favorites;
 import com.sokp.soniclauncher.compat.PackageInstallerCompat;
 import com.sokp.soniclauncher.compat.PackageInstallerCompat.PackageInstallInfo;
 import com.sokp.soniclauncher.compat.UserHandleCompat;
+import com.sokp.soniclauncher.settings.SettingsProvider;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -193,6 +193,7 @@ public class Workspace extends SmoothPagedView
     private SpringLoadedDragController mSpringLoadedDragController;
     private float mSpringLoadedShrinkFactor;
     private float mOverviewModeShrinkFactor;
+    private int mOverviewModePageOffset;
 
     // State variable that indicates whether the pages are small (ie when you're
     // in all apps or customize mode)
@@ -289,6 +290,8 @@ public class Workspace extends SmoothPagedView
     private boolean mDeferDropAfterUninstall;
     private boolean mUninstallSuccessful;
 
+    private boolean mShowSearchBar;
+
     private final Runnable mBindPages = new Runnable() {
         @Override
         public void run() {
@@ -324,6 +327,9 @@ public class Workspace extends SmoothPagedView
         setDataIsReady();
 
         mLauncher = (Launcher) context;
+
+        reloadSettings();
+
         final Resources res = getResources();
         mWorkspaceFadeInAdjacentScreens = LauncherAppState.getInstance().getDynamicGrid().
                 getDeviceProfile().shouldFadeAdjacentWorkspaceScreens();
@@ -2356,7 +2362,7 @@ public class Workspace extends SmoothPagedView
 
             Animator searchBarAlpha = new LauncherViewPropertyAnimator(searchBar)
                 .alpha(finalSearchBarAlpha).withLayer();
-            searchBarAlpha.addListener(new AlphaUpdateListener(searchBar));
+            if (mShowSearchBar) searchBarAlpha.addListener(new AlphaUpdateListener(searchBar));
 
             Animator overviewPanelAlpha = new LauncherViewPropertyAnimator(overviewPanel)
                 .alpha(finalOverviewPanelAlpha).withLayer();
@@ -2386,11 +2392,11 @@ public class Workspace extends SmoothPagedView
             overviewPanelAlpha.setDuration(duration);
             pageIndicatorAlpha.setDuration(duration);
             hotseatAlpha.setDuration(duration);
-            searchBarAlpha.setDuration(duration);
+            if (mShowSearchBar) searchBarAlpha.setDuration(duration);
 
             anim.play(overviewPanelAlpha);
             anim.play(hotseatAlpha);
-            anim.play(searchBarAlpha);
+            if (mShowSearchBar) anim.play(searchBarAlpha);
             anim.play(pageIndicatorAlpha);
             anim.setStartDelay(delay);
         } else {
@@ -2402,8 +2408,10 @@ public class Workspace extends SmoothPagedView
                 pageIndicator.setAlpha(finalHotseatAndPageIndicatorAlpha);
                 AlphaUpdateListener.updateVisibility(pageIndicator);
             }
-            searchBar.setAlpha(finalSearchBarAlpha);
-            AlphaUpdateListener.updateVisibility(searchBar);
+            if (mShowSearchBar) {
+                searchBar.setAlpha(finalSearchBarAlpha);
+                AlphaUpdateListener.updateVisibility(searchBar);
+            }
             updateCustomContentVisibility();
             setScaleX(mNewScale);
             setScaleY(mNewScale);
@@ -5155,5 +5163,10 @@ public class Workspace extends SmoothPagedView
                 }
             }
         }
+    }
+
+    public void reloadSettings() {
+        mShowSearchBar = SettingsProvider.getBoolean(mLauncher,
+                SettingsProvider.KEY_SHOW_SEARCH_BAR, true);
     }
 }
