@@ -140,8 +140,7 @@ public class Workspace extends SmoothPagedView
     private final WallpaperManager mWallpaperManager;
     private IBinder mWindowToken;
 
-    private int mOriginalDefaultPage;
-    private int mDefaultPage;
+    private long mDefaultScreenId;
 
     private long mLastMultitouch = 0;
     private boolean mMultitouchGestureDetected = false;
@@ -375,7 +374,7 @@ public class Workspace extends SmoothPagedView
             res.getInteger(R.integer.config_workspaceSpringLoadShrinkPercentage) / 100.0f;
         mOverviewModeShrinkFactor = grid.getOverviewModeScale();
         mCameraDistance = res.getInteger(R.integer.config_cameraDistance);
-        mOriginalDefaultPage = mDefaultPage = a.getInt(R.styleable.Workspace_defaultScreen, 1);
+
         a.recycle();
 
         setOnHierarchyChangeListener(this);
@@ -435,6 +434,10 @@ public class Workspace extends SmoothPagedView
         });
 
         initWorkspace();
+
+         mDefaultScreenId = SettingsProvider.getLong(context,
+                SettingsProvider.DEFAULT_HOMESCREEN,
+                getScreenIdForPageIndex(res.getInteger(R.integer.config_workspaceDefaultScreen)));
 
         // Disable multitouch across the workspace/all apps/customize tray
         setMotionEventSplittingEnabled(true);
@@ -530,7 +533,6 @@ public class Workspace extends SmoothPagedView
      * Initializes various states for this workspace.
      */
     protected void initWorkspace() {
-        mCurrentPage = mDefaultPage;
         Launcher.setScreen(mCurrentPage);
         LauncherAppState app = LauncherAppState.getInstance();
         DeviceProfile grid = app.getDynamicGrid().getDeviceProfile();
@@ -672,6 +674,13 @@ public class Workspace extends SmoothPagedView
         mWorkspaceScreens.put(screenId, newScreen);
         mScreenOrder.add(insertIndex, screenId);
         addView(newScreen, insertIndex);
+
+        if (mDefaultScreenId == screenId) {
+            int defaultPage = getPageIndexForScreenId(screenId);
+            moveToScreen(defaultPage, false);
+            Launcher.setScreen(defaultPage);
+        }
+
         return screenId;
     }
 
@@ -688,9 +697,6 @@ public class Workspace extends SmoothPagedView
         customScreen.setPadding(0, 0, 0, 0);
 
         addFullScreenPage(customScreen);
-
-        // Ensure that the current page and default page are maintained.
-        mDefaultPage = mOriginalDefaultPage + 1;
 
         // Update the custom content hint
         if (mRestorePage != INVALID_RESTORE_PAGE) {
@@ -716,9 +722,6 @@ public class Workspace extends SmoothPagedView
         }
 
         mCustomContentCallbacks = null;
-
-        // Ensure that the current page and default page are maintained.
-        mDefaultPage = mOriginalDefaultPage - 1;
 
         // Update the custom content hint
         if (mRestorePage != INVALID_RESTORE_PAGE) {
@@ -1586,6 +1589,10 @@ public class Workspace extends SmoothPagedView
     public void computeScroll() {
         super.computeScroll();
         mWallpaperOffset.syncWithScroll();
+
+        if (isInOverviewMode() && !isReordering(true)) {
+            updateDefaultScreenButton();
+        }
     }
 
     @Override
@@ -2150,6 +2157,27 @@ public class Workspace extends SmoothPagedView
         return getChangeStateAnimation(state, animated, 0, -1, layerViews);
     }
 
+    private void updateDefaultScreenButton() {
+        View overviewPanel = mLauncher.getOverviewPanel();
+        if (overviewPanel != null) {
+            View defaultPageButton = overviewPanel.findViewById(R.id.default_screen_button);
+            if (defaultPageButton != null) {
+                defaultPageButton.setActivated(
+                        getScreenIdForPageIndex(getCurrentPage()) == mDefaultScreenId);
+            }
+        }
+    }
+
+    public void onClickDefaultScreenButton() {
+        if (!isInOverviewMode()) return;
+
+        mDefaultScreenId = getScreenIdForPageIndex(getCurrentPage());
+
+        updateDefaultScreenButton();
+
+        SettingsProvider.putLong(mLauncher, SettingsProvider.DEFAULT_HOMESCREEN, mDefaultScreenId);
+    }
+
     @Override
     protected void getFreeScrollPageRange(int[] range) {
         getOverviewModePages(range);
@@ -2168,6 +2196,10 @@ public class Workspace extends SmoothPagedView
         showOutlines();
         // Reordering handles its own animations, disable the automatic ones.
         disableLayoutTransitions();
+
+        mLauncher.getOverviewPanel().animate()
+                .alpha(0f)
+                .start();
     }
 
     protected void onEndReordering() {
@@ -2190,6 +2222,13 @@ public class Workspace extends SmoothPagedView
 
         // Re-enable auto layout transitions for page deletion.
         enableLayoutTransitions();
+
+        // Show the default screen button
+        updateDefaultScreenButton();
+
+        mLauncher.getOverviewPanel().animate()
+                .alpha(1f)
+                .start();
     }
 
     public boolean isInOverviewMode() {
@@ -2218,6 +2257,12 @@ public class Workspace extends SmoothPagedView
             finalState = Workspace.State.NORMAL;
         }
 
+         mDefaultScreenId = SettingsProvider.getLong(mLauncher,
+                SettingsProvider.DEFAULT_HOMESCREEN, getScreenIdForPageIndex(
+                mLauncher.getResources().getInteger(R.integer.config_workspaceDefaultScreen)));
+
+        mLauncher.updateOverviewPanel();
+
         Animator workspaceAnim = getChangeStateAnimation(finalState, animated, 0, snapPage);
         if (workspaceAnim != null) {
             onTransitionPrepare();
@@ -2239,7 +2284,7 @@ public class Workspace extends SmoothPagedView
         int availableHeight = getViewportHeight();
         int scaledHeight = (int) (mOverviewModeShrinkFactor * getNormalChildHeight());
         int offsetFromTopEdge = (availableHeight - scaledHeight) / 2;
-        int offsetToCenterInOverview = (availableHeight - mInsets.top - overviewBar.height()
+        int offsetToCenterInOverview = (availableHeight - mInsets.top
                 - scaledHeight) / 2;
 
         return -offsetFromTopEdge + mInsets.top + offsetToCenterInOverview;
@@ -2326,8 +2371,6 @@ public class Workspace extends SmoothPagedView
 
         if (oldStateIsOverview) {
             disableFreeScroll();
-        } else if (stateIsOverview) {
-            enableFreeScroll();
         }
 
         if (state != State.NORMAL) {
@@ -5147,7 +5190,7 @@ public class Workspace extends SmoothPagedView
     }
 
     void moveToDefaultScreen(boolean animate) {
-        moveToScreen(mDefaultPage, animate);
+        moveToScreen(getPageIndexForScreenId(mDefaultScreenId), animate);
     }
 
     void moveToCustomContentScreen(boolean animate) {
