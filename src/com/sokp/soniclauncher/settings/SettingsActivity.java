@@ -49,12 +49,12 @@ public class SettingsActivity extends PreferenceActivity implements
     }
 
     private void updateHeaders(List<Header> headers) {
-        /*for (Header header : headers) {
+            for (Header header : headers) {
             if (header.id == R.id.sokp_application_version) {
                 header.title = getString(R.string.sokp_application_name) + " "
                         + getString(R.string.sokp_application_version);
             }
-        }*/
+        }
     }
 
     @Override

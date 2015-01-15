@@ -321,6 +321,7 @@ public class Workspace extends SmoothPagedView
     private boolean mUninstallSuccessful;
 
     private boolean mShowSearchBar;
+    private boolean mHideHomescreenLabels;
 
     private final Runnable mBindPages = new Runnable() {
         @Override
@@ -1099,9 +1100,12 @@ public class Workspace extends SmoothPagedView
             layout = mLauncher.getHotseat().getLayout();
             child.setOnKeyListener(new HotseatIconKeyEventListener());
 
+            boolean dockHideLabels = SettingsProvider.getBoolean(mLauncher,
+                    SettingsProvider.KEY_DOCK_HIDE_LABELS, true);
+
             // Hide folder title in the hotseat
             if (child instanceof FolderIcon) {
-                ((FolderIcon) child).setTextVisible(false);
+                ((FolderIcon) child).setTextVisible(!dockHideLabels);
             }
 
             if (computeXYFromRank) {
@@ -1113,7 +1117,7 @@ public class Workspace extends SmoothPagedView
         } else {
             // Show folder title if not in the hotseat
             if (child instanceof FolderIcon) {
-                ((FolderIcon) child).setTextVisible(true);
+                ((FolderIcon) child).setTextVisible(!mHideHomescreenLabels);
             }
             layout = getScreenWithId(screenId);
             child.setOnKeyListener(new IconKeyEventListener());
@@ -4081,6 +4085,7 @@ public class Workspace extends SmoothPagedView
             case LauncherSettings.Favorites.ITEM_TYPE_FOLDER:
                 view = FolderIcon.fromXml(R.layout.folder_icon, mLauncher, cellLayout,
                         (FolderInfo) info, mIconCache);
+                ((FolderIcon) view).setTextVisible(!mHideHomescreenLabels);
                 break;
             default:
                 throw new IllegalStateException("Unknown item type: " + info.itemType);
@@ -5302,6 +5307,9 @@ public class Workspace extends SmoothPagedView
     public void reloadSettings() {
         mShowSearchBar = SettingsProvider.getBoolean(mLauncher,
                 SettingsProvider.KEY_SHOW_SEARCH_BAR, true);
+
+        mHideHomescreenLabels = SettingsProvider.getBoolean(mLauncher,
+                SettingsProvider.KEY_HOMESCREEN_HIDE_LABELS, false);
 
         String gesture_def = mLauncher.getString(R.string.gesture_default);
         mLeftUpGestureAction = SettingsProvider.getString(mLauncher,

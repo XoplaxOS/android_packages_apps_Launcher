@@ -21,7 +21,7 @@
     
     <!-- Application name -->
     <string name="sokp_application_name">SonicLauncher</string>
-	<string name="sokp_application_version" translatable="false">Alpha-1</string>
+	<string name="sokp_application_version" translatable="false">1.0</string>
     <string name="sokp_application_copyright">Copyright \u00A9 Sonic-Developers 2015</string>
 
 	<string name="google_title">Google</string>
@@ -68,6 +68,12 @@
     <string name="homescreen_title">Homescreen</string>
     <string name="show_search_bar_title">Show search bar</string>
 
+    <!-- Hide icon labels -->
+    <string name="hide_icon_labels_title">Hide icon labels</string>
+    <string name="hide_icon_labels_drawer_summary">Hide icon labels in drawer</string>
+    <string name="hide_icon_labels_homescreen_summary">Hide icon labels on homescreen</string>
+    <string name="hide_icon_labels_dock_summary">Hide icon labels in dock</string>
+
     <!-- Drawer Settings -->
     <string name="drawer_title">Drawer</string>
 
@@ -83,6 +89,9 @@
     <string name="folder_preview_color_title">Preview color</string>
     <string name="hide_folder_name_title">Hide folder name</string>
     <string name="hide_folder_name_summary">When a folder is open do not show its name</string>
+    <string name="smart_folder_title">Smart folder</string>
+    <string name="smart_folder_summary_one">Swipe - launch first app \nTouch - open folder</string>
+    <string name="smart_folder_summart_two">Swipe - open folder \nTouch - launch first app</string>
 
     <!-- Gestures -->
     <string name="gestures_title">Gestures</string>
