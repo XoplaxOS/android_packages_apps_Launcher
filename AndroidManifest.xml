@@ -141,7 +141,8 @@
 
         <activity android:name="com.sokp.soniclauncher.settings.SettingsActivity"
             android:icon="@mipmap/ic_launcher_settings"
-            android:label="@string/sokp_application_name" />
+            android:label="@string/sokp_application_name"
+            android:theme="@style/Settings.Theme" />
 
         <!-- Debugging tools -->
         <activity
