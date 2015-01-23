@@ -597,6 +597,7 @@ public class Workspace extends SmoothPagedView
             throw new IllegalArgumentException("A Workspace can only have CellLayout children.");
         }
         CellLayout cl = ((CellLayout) child);
+        cl.setIsWorkspace(true);
         cl.setOnInterceptTouchListener(this);
         cl.setClickable(true);
         cl.setImportantForAccessibility(ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -679,6 +680,7 @@ public class Workspace extends SmoothPagedView
         CellLayout newScreen = (CellLayout)
                 mLauncher.getLayoutInflater().inflate(R.layout.workspace_screen, null);
 
+        newScreen.setIsWorkspace(true);
         newScreen.setOnLongClickListener(mLongClickListener);
         newScreen.setOnClickListener(mLauncher);
         newScreen.setSoundEffectsEnabled(false);
