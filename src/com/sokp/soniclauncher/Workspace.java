@@ -68,6 +68,7 @@ import android.view.animation.Interpolator;
 import android.widget.TextView;
 import com.sokp.soniclauncher.FolderIcon.FolderRingAnimator;
 import com.sokp.soniclauncher.Launcher.CustomContentCallbacks;
+import com.sokp.soniclauncher.Launcher.LauncherOverlay;
 import com.sokp.soniclauncher.LauncherSettings.Favorites;
 import com.sokp.soniclauncher.compat.PackageInstallerCompat;
 import com.sokp.soniclauncher.compat.PackageInstallerCompat.PackageInstallInfo;
@@ -1885,18 +1886,6 @@ public class Workspace extends SmoothPagedView
         }
     }
 
-    @Override
-    protected void overScroll(float amount) {
-        boolean shouldOverScroll = (amount < 0 && (!hasCustomContent() || isLayoutRtl())) ||
-                (amount > 0 && (!hasCustomContent() || !isLayoutRtl()));
-        if (shouldOverScroll) {
-            dampedOverScroll(amount);
-            mOverScrollEffect = acceleratedOverFactor(amount);
-        } else {
-            mOverScrollEffect = 0;
-        }
-    }
-
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         mWindowToken = getWindowToken();
@@ -2574,10 +2563,6 @@ public class Workspace extends SmoothPagedView
             Animator hotseatAlpha = new LauncherViewPropertyAnimator(hotseat)
                 .alpha(finalHotseatAndPageIndicatorAlpha).withLayer();
             hotseatAlpha.addListener(new AlphaUpdateListener(hotseat));
-
-            Animator searchBarAlpha = new LauncherViewPropertyAnimator(searchBar)
-                .alpha(finalSearchBarAlpha).withLayer();
-            if (mShowSearchBar) searchBarAlpha.addListener(new AlphaUpdateListener(searchBar));
 
             Animator overviewPanelAlpha = new LauncherViewPropertyAnimator(overviewPanel)
                 .alpha(finalOverviewPanelAlpha).withLayer();
