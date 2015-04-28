@@ -35,6 +35,7 @@ import android.view.Display;
 import android.view.WindowManager;
 
 import com.sokp.soniclauncher.compat.LauncherAppsCompat;
+import com.sokp.soniclauncher.compat.PackageInstallerCompat;
 import com.sokp.soniclauncher.compat.PackageInstallerCompat.PackageInstallInfo;
 
 import java.lang.ref.WeakReference;
@@ -164,6 +165,7 @@ public class LauncherAppState implements DeviceProfile.DeviceProfileCallbacks {
         sContext.unregisterReceiver(mModel);
         final LauncherAppsCompat launcherApps = LauncherAppsCompat.getInstance(sContext);
         launcherApps.removeOnAppsChangedCallback(mModel);
+        PackageInstallerCompat.getInstance(sContext).onStop();
 
         ContentResolver resolver = sContext.getContentResolver();
         resolver.unregisterContentObserver(mFavoritesObserver);
