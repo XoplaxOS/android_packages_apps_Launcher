@@ -289,6 +289,8 @@ public class Launcher extends Activity
     private AppDrawerListAdapter mAppDrawerAdapter;
     private AppDrawerScrubber mScrubber;
 
+    private int mDrawerType;
+
     private boolean mHideHomescreenIconLabels;
 
     private SearchDropTargetBar mSearchDropTargetBar;
@@ -532,6 +534,8 @@ public class Launcher extends Activity
         mModel = app.setLauncher(this);
         mIconCache = app.getIconCache();
         mIconCache.flushInvalidIcons(mProfile);
+
+        mDrawerType = AppDrawerListAdapter.DrawerType.getDrawerType(this);
     }
 
     public void updateDynamicGrid() {
@@ -563,6 +567,7 @@ public class Launcher extends Activity
         mModel.startLoader(true, mWorkspace.getCurrentPage());
 
         mAppDrawerAdapter.reset();
+        updateScrubberVisibility();
     }
 
     @Override
@@ -603,11 +608,20 @@ public class Launcher extends Activity
             mScrubber = (AppDrawerScrubber) view.findViewById(R.id.app_drawer_scrubber);
             mScrubber.setSource(mAppDrawer);
             mScrubber.setScrubberIndicator((TextView) view.findViewById(R.id.scrubberIndicator));
+            updateScrubberVisibility();
         }
     }
 
     public void updateScrubber() {
         mScrubber.updateSections();
+    }
+
+    public void updateScrubberVisibility() {
+        if (mDrawerType == AppDrawerListAdapter.DrawerType.VERTICAL_FOLDER) {
+            mScrubber.setVisibility(View.VISIBLE);
+        } else {
+            mScrubber.setVisibility(View.GONE);
+        }
     }
 
     public void initializeAdapter() {
@@ -3608,7 +3622,9 @@ public class Launcher extends Activity
         final View fromView = mWorkspace;
         final View toView;
 
-        if (contentType == AppsCustomizePagedView.ContentType.Applications) {
+        if ((mDrawerType == AppDrawerListAdapter.DrawerType.VERTICAL ||
+                mDrawerType == AppDrawerListAdapter.DrawerType.VERTICAL_FOLDER) && 
+                contentType == AppsCustomizePagedView.ContentType.Applications) {
             toView = findViewById(R.id.app_drawer_container);
         } else {
             toView = mAppsCustomizeTabHost;
@@ -3641,7 +3657,13 @@ public class Launcher extends Activity
             if (isWidgetTray) {
                 revealView.setBackground(res.getDrawable(R.drawable.quantum_panel_dark));
             } else {
-                revealView.setBackgroundColor(res.getColor(R.color.app_drawer_background));
+                if (mDrawerType == AppDrawerListAdapter.DrawerType.VERTICAL ||
+                        mDrawerType == AppDrawerListAdapter.DrawerType.VERTICAL_FOLDER) {
+                    revealView.setBackgroundColor(res.getColor(R.color.app_drawer_background));
+                    updateStatusBarColor(res.getColor(R.color.app_drawer_background));
+                } else {
+                    revealView.setBackground(res.getDrawable(R.drawable.quantum_panel));
+                }
             }
 
             // Hide the real page background, and swap in the fake one
@@ -3875,7 +3897,10 @@ public class Launcher extends Activity
                 res.getInteger(R.integer.config_appsCustomizeZoomScaleFactor);
         final View fromView;
 
-        if (mAppsCustomizeContent.getContentType() != AppsCustomizePagedView.ContentType.Widgets) {
+        if ((mDrawerType == AppDrawerListAdapter.DrawerType.VERTICAL ||
+                mDrawerType == AppDrawerListAdapter.DrawerType.VERTICAL_FOLDER) &&
+                mAppsCustomizeContent.getContentType()
+                != AppsCustomizePagedView.ContentType.Widgets) {
             fromView = (FrameLayout) findViewById(R.id.app_drawer_container);
         } else {
             fromView = mAppsCustomizeTabHost;
@@ -3928,8 +3953,13 @@ public class Launcher extends Activity
                 if (isWidgetTray) {
                     revealView.setBackground(res.getDrawable(R.drawable.quantum_panel_dark));
                 } else {
-                    revealView.setBackgroundColor(res.getColor(
-                            R.color.app_drawer_background));
+                    if (mDrawerType == AppDrawerListAdapter.DrawerType.VERTICAL ||
+                            mDrawerType == AppDrawerListAdapter.DrawerType.VERTICAL_FOLDER) {
+                        revealView.setBackgroundColor(res.getColor(
+                                R.color.app_drawer_background));
+                    } else {
+                        revealView.setBackground(res.getDrawable(R.drawable.quantum_panel));
+                    }
                 }
 
                 int width = revealView.getMeasuredWidth();
