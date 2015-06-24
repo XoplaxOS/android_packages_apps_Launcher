@@ -95,6 +95,8 @@ import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.view.animation.Interpolator;
+import android.view.animation.OvershootInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Advanceable;
 import android.widget.FrameLayout;
@@ -159,6 +161,9 @@ public class Launcher extends Activity
 
     private static final int REQUEST_BIND_APPWIDGET = 11;
     private static final int REQUEST_RECONFIGURE_APPWIDGET = 12;
+    public static final int REQUEST_TRANSITION_EFFECTS = 14;
+
+    private static final float OVERSHOOT_TENSION = 1.4f;
 
     /**
      * IntentStarter uses request codes starting with this. This must be greater than all activity
@@ -590,12 +595,10 @@ public class Launcher extends Activity
 
     private void initializeScrubber() {
         if (mScrubber == null) {
-            mScrubber = new AppDrawerScrubber(this);
-            int scrubberPadding = getResources()
-                    .getDimensionPixelSize(R.dimen.scrubber_bottom_padding);
-            mScrubber.setPadding(0, 0, 0, scrubberPadding);
-            mScrubber.setGravity(Gravity.BOTTOM);
+            FrameLayout view = (FrameLayout) findViewById(R.id.app_drawer_container);
+            mScrubber = (AppDrawerScrubber) view.findViewById(R.id.app_drawer_scrubber);
             mScrubber.setSource(mAppDrawer);
+            mScrubber.setScrubberIndicator((TextView) view.findViewById(R.id.scrubberIndicator));
         }
     }
 
@@ -1588,16 +1591,14 @@ public class Launcher extends Activity
     private void setupAppDrawer() {
         if (mAppDrawer == null) {
             FrameLayout view = (FrameLayout) findViewById(R.id.app_drawer_container);
-            mAppDrawer = new RecyclerView(this);
+            mAppDrawer = (RecyclerView) view.findViewById(R.id.app_drawer_recyclerview);
             mAppDrawer.setLayoutManager(new LinearLayoutManager(this));
             if (mAppDrawerAdapter == null) {
                 initializeAdapter();
             }
             mAppDrawer.setHasFixedSize(true);
             mAppDrawer.setAdapter(mAppDrawerAdapter);
-            view.addView(mAppDrawer);
             initializeScrubber();
-            view.addView(mScrubber);
         }
     }
 
@@ -3598,7 +3599,7 @@ public class Launcher extends Activity
         final View toView;
 
         if (contentType == AppsCustomizePagedView.ContentType.Applications) {
-            toView = (FrameLayout) findViewById(R.id.app_drawer_container);
+            toView = findViewById(R.id.app_drawer_container);
         } else {
             toView = mAppsCustomizeTabHost;
         }
@@ -3620,17 +3621,24 @@ public class Launcher extends Activity
             final AppsCustomizePagedView content = (AppsCustomizePagedView)
                     toView.findViewById(R.id.apps_customize_pane_content);
 
-            final View page = content != null ? content.getPageAt(content.getCurrentPage()) : null;
+            final View page = content != null ? content.getPageAt(content.getCurrentPage())
+                    : toView.findViewById(R.id.app_drawer_view);
             final View revealView = toView.findViewById(R.id.fake_page);
 
             final float initialPanelAlpha = 1f;
 
             final boolean isWidgetTray = contentType == AppsCustomizePagedView.ContentType.Widgets;
-            revealView.setBackground(res.getDrawable(R.drawable.quantum_panel_dark));
+            if (isWidgetTray) {
+                revealView.setBackground(res.getDrawable(R.drawable.quantum_panel_dark));
+            } else {
+                revealView.setBackgroundColor(res.getColor(R.color.app_drawer_background));
+            }
 
             // Hide the real page background, and swap in the fake one
             if (content != null) {
                 content.setPageBackgroundsVisible(false);
+            } else {
+                toView.setBackgroundColor(Color.TRANSPARENT);
             }
             revealView.setVisibility(View.VISIBLE);
             // We need to hide this view as the animation start will be posted.
@@ -3672,6 +3680,11 @@ public class Launcher extends Activity
 
             mStateAnimation.play(panelAlphaAndDrift);
 
+            final View drawerContent = content == null ?
+                    toView.findViewById(R.id.app_drawer_recyclerview) : null;
+            final View drawerScrubber = content == null ?
+                    toView.findViewById(R.id.scrubber_container) : null;
+
             if (page != null) {
                 page.setVisibility(View.VISIBLE);
                 page.setLayerType(View.LAYER_TYPE_HARDWARE, null);
@@ -3690,6 +3703,22 @@ public class Launcher extends Activity
                 itemsAlpha.setInterpolator(new AccelerateInterpolator(1.5f));
                 itemsAlpha.setStartDelay(itemsAlphaStagger);
                 mStateAnimation.play(itemsAlpha);
+
+                if (drawerContent != null) {
+                    drawerContent.setTranslationY(toView.getHeight());
+                    ObjectAnimator slideIn = ObjectAnimator.ofFloat(drawerContent,
+                            "translationY", 1000, 0);
+                    slideIn.setInterpolator(new OvershootInterpolator(OVERSHOOT_TENSION));
+                    slideIn.setStartDelay(revealDuration / 2);
+                    mStateAnimation.play(slideIn);
+                }
+                if (drawerScrubber != null) {
+                    drawerScrubber.setAlpha(0f);
+                    ObjectAnimator fadeIn = ObjectAnimator.ofFloat(drawerScrubber,
+                            "alpha", 0f, 1f);
+                    fadeIn.setStartDelay(revealDuration / 2);
+                    mStateAnimation.play(fadeIn);
+                }
             }
 
             View pageIndicators = toView.findViewById(R.id.apps_customize_page_indicator);
@@ -3723,6 +3752,8 @@ public class Launcher extends Activity
                     }
                     if (content != null) {
                         content.setPageBackgroundsVisible(true);
+                    } else {
+                        toView.setBackgroundColor(res.getColor(R.color.app_drawer_background));
                     }
 
                     // Hide the search bar
@@ -3809,7 +3840,7 @@ public class Launcher extends Activity
         }
 
         boolean material = Utilities.isLmpOrAbove();
-        Resources res = getResources();
+        final Resources res = getResources();
 
         final int duration = res.getInteger(R.integer.config_appsCustomizeZoomOutTime);
         final int fadeOutDuration = res.getInteger(R.integer.config_appsCustomizeFadeOutTime);
@@ -3849,7 +3880,8 @@ public class Launcher extends Activity
             final AppsCustomizePagedView content = (AppsCustomizePagedView)
                     fromView.findViewById(R.id.apps_customize_pane_content);
 
-            final View page = content != null ? content.getPageAt(content.getNextPage()) : null;
+            final View page = content != null ? content.getPageAt(content.getNextPage())
+                    : fromView.findViewById(R.id.app_drawer_view);
 
             // We need to hide side pages of the Apps / Widget tray to avoid some ugly edge cases
             int count = content != null ? content.getChildCount() : 0;
@@ -3870,7 +3902,12 @@ public class Launcher extends Activity
                 final boolean isWidgetTray =
                         contentType == AppsCustomizePagedView.ContentType.Widgets;
 
-                revealView.setBackground(res.getDrawable(R.drawable.quantum_panel_dark));
+                if (isWidgetTray) {
+                    revealView.setBackground(res.getDrawable(R.drawable.quantum_panel_dark));
+                } else {
+                    revealView.setBackgroundColor(res.getColor(
+                            R.color.app_drawer_background));
+                }
 
                 int width = revealView.getMeasuredWidth();
                 int height = revealView.getMeasuredHeight();
@@ -3880,6 +3917,8 @@ public class Launcher extends Activity
                 revealView.setVisibility(View.VISIBLE);
                 if (content != null) {
                     content.setPageBackgroundsVisible(false);
+                } else {
+                    fromView.setBackgroundColor(Color.TRANSPARENT);
                 }
 
                 revealView.setTranslationY(0);
@@ -3927,6 +3966,9 @@ public class Launcher extends Activity
                     mStateAnimation.play(panelAlpha);
                 }
 
+                final View drawerScrubber = content == null ?
+                        fromView.findViewById(R.id.scrubber_container) : null;
+
                 if (page != null) {
                     page.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
@@ -3943,6 +3985,13 @@ public class Launcher extends Activity
                     itemsAlpha.setDuration(100);
                     itemsAlpha.setInterpolator(decelerateInterpolator);
                     mStateAnimation.play(itemsAlpha);
+
+                    if (drawerScrubber != null) {
+                        drawerScrubber.setAlpha(1f);
+                        ObjectAnimator fadeOut = ObjectAnimator.ofFloat(drawerScrubber,
+                                "alpha", 1f, 0f);
+                        mStateAnimation.play(fadeOut);
+                    }
                 }
 
                 View pageIndicators = fromView.findViewById(R.id.apps_customize_page_indicator);
@@ -3996,6 +4045,8 @@ public class Launcher extends Activity
                     }
                     if (content != null) {
                         content.setPageBackgroundsVisible(true);
+                    } else {
+                        fromView.setBackgroundColor(res.getColor(R.color.app_drawer_background));
                     }
                     // Unhide side pages
                     int count = content != null ? content.getChildCount() : 0;
