@@ -110,7 +110,7 @@ import com.sokp.soniclauncher.compat.UserHandleCompat;
 import com.sokp.soniclauncher.compat.UserManagerCompat;
 import com.sokp.soniclauncher.settings.SettingsActivity;
 import com.sokp.soniclauncher.settings.SettingsProvider;
-import com.slim.slimlauncher.util.GestureHelper; 
+import com.sokp.soniclauncher.util.GestureHelper; 
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
