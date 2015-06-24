@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.launcher3;
+package com.sokp.soniclauncher;
 
-import com.android.launcher3.backup.BackupProtos.CheckedMessage;
-import com.android.launcher3.backup.BackupProtos.Favorite;
-import com.android.launcher3.backup.BackupProtos.Key;
-import com.android.launcher3.backup.BackupProtos.Journal;
-import com.android.launcher3.backup.BackupProtos.Resource;
-import com.android.launcher3.backup.BackupProtos.Screen;
-import com.android.launcher3.backup.BackupProtos.Widget;
+import com.sokp.soniclauncher.backup.BackupProtos.CheckedMessage;
+import com.sokp.soniclauncher.backup.BackupProtos.Favorite;
+import com.sokp.soniclauncher.backup.BackupProtos.Key;
+import com.sokp.soniclauncher.backup.BackupProtos.Journal;
+import com.sokp.soniclauncher.backup.BackupProtos.Resource;
+import com.sokp.soniclauncher.backup.BackupProtos.Screen;
+import com.sokp.soniclauncher.backup.BackupProtos.Widget;
 
 import com.google.protobuf.nano.InvalidProtocolBufferNanoException;
 import com.google.protobuf.nano.MessageNano;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.launcher3;
+package com.sokp.soniclauncher;
 
 import android.app.ActionBar;
 import android.app.Activity;
