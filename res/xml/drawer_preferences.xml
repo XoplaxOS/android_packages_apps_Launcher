@@ -3,7 +3,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:launcher="http://schemas.android.com/apk/res-auto">
 
-    <com.android.launcher3.preference.DoubleNumberPickerPreference
+    <com.sokp.soniclauncher.preference.DoubleNumberPickerPreference
         android:key="drawer_grid"
         android:summary="@string/grid_size_summary"
         android:title="@string/grid_size_title"

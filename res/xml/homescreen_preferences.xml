@@ -9,7 +9,7 @@
         android:title="@string/show_search_bar_title"
         android:defaultValue="true" />
 
-    <com.android.launcher3.preference.DoubleNumberPickerPreference
+    <com.sokp.soniclauncher.preference.DoubleNumberPickerPreference
         android:key="homescreen_grid"
         android:summary="@string/grid_size_summary"
         android:title="@string/grid_size_title"
