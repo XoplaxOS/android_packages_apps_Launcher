@@ -19,7 +19,10 @@
 -->
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.sokp.soniclauncher">
+    package="com.sokp.soniclauncher"
+	android:versionName="@string/sokp_application_version"
+    android:versionCode="1000">
+	
     <uses-sdk android:targetSdkVersion="21" android:minSdkVersion="16"/>
 
     <permission

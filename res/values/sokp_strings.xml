@@ -21,7 +21,9 @@
     
     <!-- Application name -->
     <string name="sokp_application_name">SonicLauncher</string>
-	
+	<string name="sokp_application_version" translatable="false">Alpha-1</string>
+    <string name="sokp_application_copyright">Copyright \u00A9 Sonic-Developers 2015</string>
+
 	<string name="google_title">Google</string>
 
     <string name="default_string">Default</string>
