@@ -29,9 +29,13 @@ import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.RectShape;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -52,6 +56,7 @@ import android.widget.Toast;
 import com.sokp.soniclauncher.DropTarget.DragObject;
 import com.sokp.soniclauncher.compat.AppWidgetManagerCompat;
 import com.sokp.soniclauncher.settings.SettingsProvider;
+import com.sokp.soniclauncher.util.ColorUtils;
 import com.sokp.soniclauncher.util.GestureHelper;
 
 import java.util.ArrayList;
@@ -317,7 +322,8 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
 
         Context context = getContext();
         Resources r = context.getResources();
-        setDragSlopeThreshold(r.getInteger(R.integer.config_appsCustomizeDragSlopeThreshold)/100f);
+        setDragSlopeThreshold(r.getInteger(
+                R.integer.config_appsCustomizeDragSlopeThreshold) / 100f);
     }
 
     public void onFinishInflate() {
@@ -1027,8 +1033,11 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
         layout.measure(widthSpec, heightSpec);
 
         Drawable bg = getContext().getResources().getDrawable(R.drawable.quantum_panel);
+        int color = SettingsProvider.getInt(mLauncher, SettingsProvider.KEY_DRAWER_BACKGROUND,
+                Color.WHITE);
         if (bg != null) {
-            bg.setAlpha(mPageBackgroundsVisible ? 255: 0);
+            bg.setAlpha(mPageBackgroundsVisible ? 255 : 0);
+            bg.setColorFilter(color, PorterDuff.Mode.MULTIPLY);
             layout.setBackground(bg);
         }
 
@@ -1063,6 +1072,10 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
             AppInfo info = mFilteredApps.get(i);
             BubbleTextView icon = (BubbleTextView) mLayoutInflater.inflate(
                     R.layout.apps_customize_application, layout, false);
+            if (!ColorUtils.darkTextColor(SettingsProvider.getInt(mLauncher,
+                    SettingsProvider.KEY_DRAWER_BACKGROUND, Color.WHITE))) {
+                icon.setTextColor(Color.WHITE);
+            }
             icon.applyFromApplicationInfo(info);
             icon.setTextVisibility(!hideIconLabels);
             icon.setOnClickListener(mLauncher);
